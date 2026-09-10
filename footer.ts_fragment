@@ -1,0 +1,15 @@
+
+type TokenOf<T> = {
+  [K in keyof _EventTarget_Registry]: T extends _EventTarget_Registry[K]
+    ? _EventTarget_Registry[K] extends T
+      ? K
+      : never
+    : never;
+}[keyof _EventTarget_Registry];
+
+
+declare global {
+  type EventMap<T> = _EventMap_Registry[TokenOf<T>];
+}
+
+export {};
