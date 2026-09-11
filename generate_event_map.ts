@@ -55,7 +55,7 @@ async function main() {
 		if (ts.isInterfaceDeclaration(node)) {
 			const interface_name = node.name.text;
 			const type_str = node.typeParameters && node.typeParameters.length > 0
-				? `<${node.typeParameters?.map(() => "unknown").join(",")}>`
+				? `<${node.typeParameters?.map((parameter) => parameter.getText()).join(",")}>`
 				: "";
 
 			for (const m of node.members) {
@@ -78,26 +78,10 @@ async function main() {
 
 	const lines: string[] = [];
 
-	// generate type symbols
-	for (const { name } of interfaces) {
-		lines.push(`declare const _${name}: unique symbol;`);
+	// generate interfaces
+	for (const { name, constraint, type_str } of interfaces) {
+		lines.push(`\tinterface ${name}${type_str} { readonly [__EventMapBrand]: ${constraint} }`)
 	}
-
-	// event_map interface
-	lines.push("\n")
-	lines.push("interface _EventMap_Registry {")
-	for (const { name, constraint } of interfaces) {
-		lines.push(`\t[_${name}]: ${constraint};`);
-	}
-	lines.push("}")
-
-	// event_target interface
-	lines.push("\n")
-	lines.push("interface _EventTarget_Registry {")
-	for (const { name, type_str } of interfaces) {
-		lines.push(`\t[_${name}]: ${name}${type_str};`);
-	}
-	lines.push("}")
 
 	let head_fragment = await Deno.readTextFile("./head.ts_fragment");
 	const footer_fragment = await Deno.readTextFile("./footer.ts_fragment");
